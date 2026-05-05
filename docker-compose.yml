@@ -40,7 +40,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: ["python", "workers/worker.py"]
+    command: ["python", "-m", "workers.worker"]
     env_file:
       - .env
     environment:
