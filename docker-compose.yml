@@ -1,4 +1,14 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   kafka:
     image: docker.redpanda.com/redpandadata/redpanda:v24.3.5
     hostname: kafka
@@ -32,8 +42,11 @@ services:
       - .env
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   worker:
@@ -45,6 +58,18 @@ services:
       - .env
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       kafka:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api

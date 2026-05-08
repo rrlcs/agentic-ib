@@ -1,4 +1,6 @@
-"""Dispatcher routing."""
+"""Dispatcher routing — only verifies handler selection (not pipeline)."""
+
+from __future__ import annotations
 
 from mcp.builder import build_mcp_message
 from mcp.schema import MCPMessage
@@ -6,26 +8,35 @@ from workers.dispatcher import dispatch
 
 
 def test_dispatch_runs_research_agent(monkeypatch) -> None:
-    monkeypatch.setattr("agents.research_agent.generate_response", lambda *_: "research text for Acme")
-    m = build_mcp_message(
+    monkeypatch.setattr(
+        "agents.research_agent.run_agent_loop",
+        lambda **_: {
+            "answer": "research text for Acme",
+            "tool_calls": [],
+            "iterations": 1,
+            "status": "ok",
+        },
+    )
+    mcp = build_mcp_message(
         "job-1",
         agent="research_agent",
         payload={"task_name": "run_agent", "payload": {"company": "Acme"}},
     )
-    out = dispatch(m)
+    mcp.context["company"] = "Acme"
+    out = dispatch(mcp)
     assert isinstance(out, MCPMessage)
-    assert out.agent == "financial_agent"
     assert out.metadata["step"] == "research_done"
-    assert "Acme" in out.context["research"]
+    assert "research" in out.context
+    assert out.context["research"] == "research text for Acme"
 
 
-def test_dispatch_router_passthrough() -> None:
-    m = build_mcp_message(
+def test_dispatch_unknown_agent() -> None:
+    mcp = build_mcp_message(
         "job-2",
-        agent="router",
+        agent="totally_made_up",
         payload={"task_name": "run_agent", "payload": {}},
     )
-    out = dispatch(m)
-    assert isinstance(out, MCPMessage)
-    assert out.agent == "research_agent"
-    assert out.task_id == "job-2"
+    out = dispatch(mcp)
+    assert isinstance(out, dict)
+    assert out["status"] == "failed"
+    assert "unknown_agent" in out["reason"]

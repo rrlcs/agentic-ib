@@ -28,9 +28,20 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def log_event(log: logging.Logger, message: str, **fields: object) -> None:
-    """Emit key-value structured fields in message text."""
-    if not fields:
+    """Emit key-value structured fields in message text and forward to tracer."""
+    if fields:
+        rendered = " ".join(f"{key}={value}" for key, value in fields.items())
+        log.info("%s %s", message, rendered)
+    else:
         log.info(message)
-        return
-    rendered = " ".join(f"{key}={value}" for key, value in fields.items())
-    log.info("%s %s", message, rendered)
+
+    task_id = fields.get("task_id") if fields else None
+    if task_id:
+        try:
+            from observability.tracer import publish_trace
+
+            payload = {key: value for key, value in fields.items() if key != "task_id"}
+            payload["component"] = log.name
+            publish_trace(str(task_id), message, **payload)
+        except Exception:  # pragma: no cover - tracing is best-effort
+            pass
