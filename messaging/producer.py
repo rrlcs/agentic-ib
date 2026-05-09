@@ -1,4 +1,4 @@
-"""Kafka producer for dispatching agent tasks."""
+"""Kafka API producer for dispatching agent tasks to Redpanda."""
 
 from __future__ import annotations
 
@@ -18,7 +18,9 @@ log = get_logger(__name__)
 
 
 def _bootstrap_servers() -> str:
-    return os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+    return os.environ.get("REDPANDA_BOOTSTRAP_SERVERS") or os.environ.get(
+        "KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"
+    )
 
 
 def _get_producer() -> KafkaProducer:

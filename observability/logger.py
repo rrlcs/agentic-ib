@@ -18,6 +18,7 @@ def configure_logging() -> None:
         level=level,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     )
+    # kafka-python emits logs under the "kafka" logger even when backend broker is Redpanda.
     logging.getLogger("kafka").setLevel(logging.WARNING)
     _CONFIGURED = True
 

@@ -9,16 +9,16 @@ services:
       timeout: 3s
       retries: 10
 
-  kafka:
+  redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.3.5
-    hostname: kafka
+    hostname: redpanda
     command:
       - redpanda
       - start
       - --kafka-addr
       - PLAINTEXT://0.0.0.0:9092
       - --advertise-kafka-addr
-      - PLAINTEXT://kafka:9092
+      - PLAINTEXT://redpanda:9092
       - --mode
       - dev-container
       - --smp
@@ -41,10 +41,10 @@ services:
     env_file:
       - .env
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDPANDA_BOOTSTRAP_SERVERS: redpanda:9092
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      kafka:
+      redpanda:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -57,10 +57,10 @@ services:
     env_file:
       - .env
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDPANDA_BOOTSTRAP_SERVERS: redpanda:9092
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      kafka:
+      redpanda:
         condition: service_healthy
       redis:
         condition: service_healthy

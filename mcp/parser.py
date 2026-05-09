@@ -1,4 +1,4 @@
-"""Parse and normalize MCP envelopes from Kafka / HTTP payloads."""
+"""Parse and normalize MCP envelopes from Kafka-compatible broker / HTTP payloads."""
 
 from __future__ import annotations
 
@@ -22,6 +22,11 @@ def parse_mcp_message_safe(raw: dict[str, Any]) -> MCPMessage | None:
         return None
 
 
-def message_to_kafka_dict(message: MCPMessage) -> dict[str, Any]:
-    """Serialize for kafka-python JSON producer."""
+def message_to_broker_dict(message: MCPMessage) -> dict[str, Any]:
+    """Serialize for broker JSON producers/consumers."""
     return message.model_dump(mode="json")
+
+
+def message_to_kafka_dict(message: MCPMessage) -> dict[str, Any]:
+    """Backward-compatible alias for older imports."""
+    return message_to_broker_dict(message)

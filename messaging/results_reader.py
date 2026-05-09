@@ -1,4 +1,4 @@
-"""Read completed agent results from Kafka."""
+"""Read completed agent results via Kafka API (from Redpanda)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,9 @@ from messaging.topics import AGENT_RESULTS
 
 
 def _bootstrap_servers() -> str:
-    return os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+    return os.environ.get("REDPANDA_BOOTSTRAP_SERVERS") or os.environ.get(
+        "KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"
+    )
 
 
 def get_result_by_task_id(task_id: str, *, timeout_ms: int = 2000) -> dict[str, Any] | None:

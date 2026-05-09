@@ -1,4 +1,4 @@
-"""Consume agent tasks from Kafka and run the dynamic pipeline planned by the router.
+"""Consume agent tasks from the broker and run the dynamic pipeline planned by the router.
 
 Worker semantics
 ----------------
@@ -35,7 +35,9 @@ _MAX_LOOP = 64
 
 
 def _bootstrap_servers() -> str:
-    return os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+    return os.environ.get("REDPANDA_BOOTSTRAP_SERVERS") or os.environ.get(
+        "KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"
+    )
 
 
 def _peek_next_step(mcp: MCPMessage) -> Any:
